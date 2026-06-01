@@ -1,149 +1,124 @@
-# CarDekho AI Shortlist Builder - Backend API Server
+# AI Shortlist Builder
 
-This repository contains the backend Node.js, Express, and TypeScript API server for the **AI Shortlist Builder** web application.
+## What did you build and why? What did you deliberately cut?
 
----
+AI Shortlist Builder helps users go from:
 
-## 🚗 Core Design & Highlights
+> "I don't know what car to buy"
 
-1. **Dual-Mode System Architecture**:
-   - **Cloud Mode**: Connects to your remote **Supabase Postgres** instance and triggers **Google Gemini Flash** (or fallback **Anthropic Claude 3.5 Sonnet**) for real-time recommendations.
-   - **Offline Demo Mode**: If no `.env` credentials are provided (or if connections time out), the server automatically activates a local, in-memory representation of our **17 seeded Indian cars** and runs a **Rule-Based Mock AI engine**.
-   - This ensures **zero-configuration runnability** for graders, with fully personalized matching, selection criteria bullets, tradeoffs, and rejected cars.
+to
 
-2. **Indian Market Seed Data**:
-   - Includes data for 17 popular Indian vehicles (Maruti Suzuki Swift, Tata Nexon EV, Toyota Innova Hycross, BMW 3 Series, etc.) with accurate Lakh-denominated pricing, mileage, safety stars, body types, and fuel options.
+> "These are the 3 cars I should seriously consider."
 
-3. **Smart Candidate Relaxation**:
-   - If a user inputs extremely restrictive criteria (e.g., EVs under 10 Lakhs) that produce zero database matches, the server progressively relaxes filters (first body type, then fuel type, then budget limits) so the LLM always receives relevant, nearby alternatives to explain and justify.
+Users answer a few questions about their budget, usage, family size, fuel preference, and priorities. The system then generates a personalized shortlist with explanations, tradeoffs, and reasons why certain cars were selected over others.
 
 ---
 
-## 📂 Directory Layout
+## Tech Stack
 
-```text
-cardekho_backend/
-├── db/
-│   ├── carsData.ts         # Shared single-source-of-truth static car seed records
-│   ├── ddl.sql             # SQL migrations for Cars & Searches tables
-│   ├── dml.sql             # SQL raw INSERT statements for seeding
-│   └── seed.ts             # Programmatic TypeScript Supabase seeder utility
-├── controllers/
-│   └── carController.ts    # Route handler orchestrator & validation
-├── services/
-│   ├── supabaseService.ts  # Database connection manager with in-memory fallback
-│   ├── carFilterService.ts # Progressive candidate filtering and relaxation
-│   └── aiRecommendationService.ts # Gemini/Claude integration and Mock AI fallback
-├── routes/
-│   └── routes.ts           # REST endpoint mapping
-├── validators/
-│   └── recommendValidator.ts # Joi request body schema validator
-├── app.ts                  # Server configuration and boot configuration
-├── package.json
-└── tsconfig.json
-```
+### Frontend
+
+* Next.js 15
+* TypeScript
+* Tailwind CSS
+* ShadCN UI
+
+### Backend
+
+* Node.js
+* Express
+
+### Database
+
+* Supabase (PostgreSQL)
+
+### AI
+
+* Gemini API
 
 ---
 
-## 🛠️ Environment Configurations
+## What I Deliberately Cut
 
-Create a `.env` file in the root of this folder. You can copy the contents of `.env.example`:
+To keep the scope focused, I intentionally did not build:
 
-```bash
-# Server Port (Defaults to 5001)
-PORT=5001
+* Authentication
+* User accounts
+* Saved searches
+* Chat interface
+* Vehicle comparison pages
+* Dealer integrations
 
-# Supabase Postgres Keys (Optional: leaves system in in-memory fallback if empty)
-SUPABASE_URL=https://your-project-id.supabase.co
-SUPABASE_ANON_KEY=your-anon-public-key
-SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key-only-required-for-seed-script
-
-# AI LLM Provider Keys
-# (Optional: If both missing, backend operates in high-fidelity heuristic offline AI mode!)
-GEMINI_API_KEY=your-google-gemini-api-key
-
-# Fallback AI LLM Provider (Optional)
-ANTHROPIC_API_KEY=your-anthropic-claude-api-key
-# OR
-CLAUDE_API_KEY=your-anthropic-claude-api-key
-```
+The goal was to build the shortest path from user preferences to a confident shortlist.
 
 ---
 
-## 🚀 Running the Server
+## AI Usage
 
-### 1. Install Dependencies
+I used AI tools to speed up:
+
+* UI scaffolding
+* Boilerplate code
+* Type definitions
+* Prompt iteration
+* Documentation
+
+The product design, recommendation flow, data model, and AI orchestration logic were designed manually.
+
+---
+
+## Where AI Helped Most
+
+AI was especially useful for generating repetitive code and accelerating UI development, allowing me to focus more on product decisions and recommendation quality.
+
+---
+
+## Where AI Got In The Way
+
+AI often suggested more complexity than needed (agents, RAG, vector databases, etc.). For this assignment, keeping the solution simple was usually the better choice.
+
+---
+
+## If I Had 4 More Hours
+
+I would add:
+
+* Follow-up questions to refine recommendations
+* Side by side car comparison
+* Better explainability and scoring
+* Real user review summaries
+* Save and revisit previous searches
+
+---
+
+## Running Locally
+
+### Frontend
+
 ```bash
 npm install
-```
-
-### 2. Database Seeding (Optional - requires Supabase credentials in .env)
-```bash
-npm run seed
-```
-
-### 3. Run Development Server
-```bash
 npm run dev
 ```
-The server will boot and listen on **`http://localhost:5001`**.
+
+### Backend
+
+```bash
+npm install
+npm run dev
+```
+
+Configure the following environment variables:
+
+```env
+SUPABASE_URL=
+SUPABASE_ANON_KEY=
+GEMINI_API_KEY=
+```
 
 ---
 
-## 📡 REST Endpoints
+## Key Takeaway
 
-### 1. `GET /api/health`
-Checks server status, database connection state, and active AI providers.
-* **URL**: `http://localhost:5001/api/health`
+This project is not a car search engine.
 
-### 2. `GET /api/cars`
-Lists all cars loaded into the active database (cloud or in-memory fallback).
-* **URL**: `http://localhost:5001/api/cars`
-
-### 3. `POST /api/recommend`
-Submits a questionnaire and retrieves personalized top 3 recommendations, selection reasoning, and rejected alternatives.
-* **URL**: `http://localhost:5001/api/recommend`
-* **Payload Format**:
-```json
-{
-  "budget": "10-15 Lakhs",
-  "familySize": "3-4",
-  "primaryUsage": "City Driving",
-  "fuelPreference": "Petrol",
-  "bodyType": "SUV",
-  "topPriority": "Safety"
-}
-```
-* **Response Format**:
-```json
-{
-  "success": true,
-  "data": {
-    "recommendedCars": [
-      {
-        "name": "Tata Nexon",
-        "score": 95,
-        "whyFit": "Fits your requirement for a Safe SUV under 15 Lakhs. It offers GNCAP 5-star safety.",
-        "tradeOffs": "Firm low-speed ride quality.",
-        "idealBuyer": "Safety-conscious small families commuting in the city."
-      }
-    ],
-    "selectionReasoning": [
-      "✓ Fits budget",
-      "✓ 5-star GNCAP safety"
-    ],
-    "rejectedCars": [
-      {
-        "name": "Hyundai Creta",
-        "reason": "Exceeds the 15 Lakh budget limit in its top-safety trims."
-      }
-    ]
-  },
-  "metadata": {
-    "candidatesCount": 4,
-    "filtersRelaxed": false,
-    "databaseMode": "Offline Demo (In-Memory)",
-    "aiMode": "Local Heuristic AI Engine"
-  }
-}
-```
+It's a decision-support tool designed to help users confidently narrow down thousands of options into a shortlist they can actually act on.
