@@ -82,19 +82,19 @@ class NegotiationService {
     // 3. Try to generate script via AI if keys are present
     if (this.gemini) {
       try {
-        console.log(`🤖 [Negotiation Kit] Querying Gemini for ${car.brand} ${car.name} (${variant})...`);
-        return await this.generateWithGemini(car, variant, pricing);
+        console.log(`🤖 [Negotiation Kit] Querying Primary LLM for ${car.brand} ${car.name} (${variant})...`);
+        return await this.generateWithPrimaryLLM(car, variant, pricing);
       } catch (err) {
-        console.error('❌ Gemini negotiation generation failed, trying Claude:', err);
+        console.error('❌ Primary LLM negotiation generation failed, trying secondary model:', err);
       }
     }
 
     if (this.anthropic) {
       try {
-        console.log(`🤖 [Negotiation Kit] Querying Claude for ${car.brand} ${car.name} (${variant})...`);
-        return await this.generateWithClaude(car, variant, pricing);
+        console.log(`🤖 [Negotiation Kit] Querying Secondary LLM for ${car.brand} ${car.name} (${variant})...`);
+        return await this.generateWithSecondaryLLM(car, variant, pricing);
       } catch (err) {
-        console.error('❌ Claude negotiation generation failed, using fallback:', err);
+        console.error('❌ Secondary LLM negotiation generation failed, using fallback:', err);
       }
     }
 
@@ -159,10 +159,10 @@ class NegotiationService {
   }
 
   /**
-   * Calls Gemini for a custom kit
+   * Calls primary LLM for a custom kit
    */
-  private async generateWithGemini(car: Car, variant: string, pricing: PricingBreakdown): Promise<NegotiationKitResult> {
-    if (!this.gemini) throw new Error('Gemini SDK not initialized');
+  private async generateWithPrimaryLLM(car: Car, variant: string, pricing: PricingBreakdown): Promise<NegotiationKitResult> {
+    if (!this.gemini) throw new Error('Primary LLM SDK not initialized');
 
     const prompt = this.buildAIPrompt(car, variant, pricing);
     
@@ -180,10 +180,10 @@ class NegotiationService {
   }
 
   /**
-   * Calls Claude for a custom kit
+   * Calls secondary LLM for a custom kit
    */
-  private async generateWithClaude(car: Car, variant: string, pricing: PricingBreakdown): Promise<NegotiationKitResult> {
-    if (!this.anthropic) throw new Error('Claude SDK not initialized');
+  private async generateWithSecondaryLLM(car: Car, variant: string, pricing: PricingBreakdown): Promise<NegotiationKitResult> {
+    if (!this.anthropic) throw new Error('Secondary LLM SDK not initialized');
 
     const prompt = this.buildAIPrompt(car, variant, pricing);
 

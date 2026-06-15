@@ -72,9 +72,9 @@ export class CarController {
           relaxationReason: filterResult.relaxationReason || null,
           databaseMode: supabaseService.isOfflineMode() ? 'Offline Demo (In-Memory)' : 'Supabase Cloud Connected',
           aiMode: process.env.GEMINI_API_KEY 
-            ? 'Google Gemini Flash' 
+            ? 'Primary AI Engine' 
             : (process.env.ANTHROPIC_API_KEY || process.env.CLAUDE_API_KEY) 
-              ? 'Anthropic Claude Sonnet' 
+              ? 'Secondary AI Engine' 
               : 'Local Heuristic AI Engine'
         }
       });
@@ -119,8 +119,8 @@ export class CarController {
       system: {
         databaseMode: supabaseService.isOfflineMode() ? 'Offline (In-Memory Fallback)' : 'Cloud (Supabase Postgres Connected)',
         aiIntegration: {
-          claudeAvailable: !!(process.env.ANTHROPIC_API_KEY || process.env.CLAUDE_API_KEY),
-          geminiAvailable: !!process.env.GEMINI_API_KEY
+          secondaryModelAvailable: !!(process.env.ANTHROPIC_API_KEY || process.env.CLAUDE_API_KEY),
+          primaryModelAvailable: !!process.env.GEMINI_API_KEY
         }
       }
     });

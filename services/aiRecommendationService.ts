@@ -35,11 +35,11 @@ class AIRecommendationService {
 
     if (geminiKey) {
       this.gemini = new GoogleGenerativeAI(geminiKey);
-      console.log('🤖 Google Gemini AI configured.');
+      console.log('🤖 Primary AI engine configured.');
     }
     if (anthropicKey) {
       this.anthropic = new Anthropic({ apiKey: anthropicKey });
-      console.log('🤖 Anthropic Claude AI configured.');
+      console.log('🤖 Secondary AI engine configured.');
     }
 
     if (!geminiKey && !anthropicKey) {
@@ -61,20 +61,20 @@ class AIRecommendationService {
     // Try Gemini (Primary)
     if (this.gemini) {
       try {
-        console.log('🤖 Requesting recommendations from Google Gemini...');
-        return await this.callGemini(criteria, candidates);
+        console.log('🤖 Requesting recommendations from primary AI engine...');
+        return await this.callPrimaryLLM(criteria, candidates);
       } catch (err) {
-        console.error('❌ Gemini API call failed, attempting Anthropic Claude fallback:', err);
+        console.error('❌ Primary API call failed, attempting secondary model fallback:', err);
       }
     }
 
     // Try Claude (Fallback)
     if (this.anthropic) {
       try {
-        console.log('🤖 Requesting recommendations from Anthropic Claude...');
-        return await this.callClaude(criteria, candidates);
+        console.log('🤖 Requesting recommendations from secondary model...');
+        return await this.callSecondaryLLM(criteria, candidates);
       } catch (err) {
-        console.error('❌ Claude API call failed, defaulting to Local Mock Engine:', err);
+        console.error('❌ Secondary API call failed, defaulting to Local Mock Engine:', err);
       }
     }
 
@@ -84,10 +84,10 @@ class AIRecommendationService {
   }
 
   /**
-   * Call Google Gemini API
+   * Call primary LLM API
    */
-  private async callGemini(criteria: FilterCriteria, candidates: Car[]): Promise<AIRecommendationResult> {
-    if (!this.gemini) throw new Error('Gemini SDK not initialized');
+  private async callPrimaryLLM(criteria: FilterCriteria, candidates: Car[]): Promise<AIRecommendationResult> {
+    if (!this.gemini) throw new Error('Primary LLM SDK not initialized');
 
     const prompt = this.buildPrompt(criteria, candidates);
     
@@ -105,10 +105,10 @@ class AIRecommendationService {
   }
 
   /**
-   * Call Anthropic Claude API
+   * Call secondary LLM API
    */
-  private async callClaude(criteria: FilterCriteria, candidates: Car[]): Promise<AIRecommendationResult> {
-    if (!this.anthropic) throw new Error('Claude SDK not initialized');
+  private async callSecondaryLLM(criteria: FilterCriteria, candidates: Car[]): Promise<AIRecommendationResult> {
+    if (!this.anthropic) throw new Error('Secondary LLM SDK not initialized');
 
     const prompt = this.buildPrompt(criteria, candidates);
 
