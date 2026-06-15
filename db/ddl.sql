@@ -1,4 +1,4 @@
--- DDL: Database Schema Definition for CarDekho AI Shortlist Builder
+-- DDL: Database Schema Definition for VALT AI Shortlist Builder
 
 -- Drop tables if they exist (for clean migrations)
 DROP TABLE IF EXISTS searches;

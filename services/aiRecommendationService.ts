@@ -96,7 +96,7 @@ class AIRecommendationService {
       generationConfig: {
         responseMimeType: 'application/json',
       },
-      systemInstruction: 'You are a senior automotive purchase consultant at CarDekho. Your job is to select the top 3 cars from the candidate list that fit the user preferences, score them out of 100, explain why they fit, list critical tradeoffs, and describe the ideal buyer. You must also select 2-3 cars to reject (either from candidate list or comparative alternatives list) and explain why. Output strictly in valid JSON matching the requested schema.'
+      systemInstruction: 'You are a senior automotive purchase consultant at VALT. Your job is to select the top 3 cars from the candidate list that fit the user preferences, score them out of 100, explain why they fit, list critical tradeoffs, and describe the ideal buyer. You must also select 2-3 cars to reject (either from candidate list or comparative alternatives list) and explain why. Output strictly in valid JSON matching the requested schema.'
     });
 
     const result = await model.generateContent(prompt);
@@ -116,7 +116,7 @@ class AIRecommendationService {
       model: 'claude-3-5-sonnet-20241022',
       max_tokens: 3000,
       temperature: 0.2,
-      system: 'You are a senior automotive purchase consultant at CarDekho. Your job is to select the top 3 cars from the candidate list that fit the user preferences, score them out of 100, explain why they fit, list critical tradeoffs, and describe the ideal buyer. You must also select 2-3 cars to reject (either from candidate list or comparative alternatives list) and explain why. Output ONLY a valid JSON object matching the requested schema. No conversational preamble, no markdown code block wraps. Just raw JSON.',
+      system: 'You are a senior automotive purchase consultant at VALT. Your job is to select the top 3 cars from the candidate list that fit the user preferences, score them out of 100, explain why they fit, list critical tradeoffs, and describe the ideal buyer. You must also select 2-3 cars to reject (either from candidate list or comparative alternatives list) and explain why. Output ONLY a valid JSON object matching the requested schema. No conversational preamble, no markdown code block wraps. Just raw JSON.',
       messages: [{ role: 'user', content: prompt }]
     });
 

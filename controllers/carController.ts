@@ -3,6 +3,8 @@ import { carFilterService, FilterCriteria } from '../services/carFilterService';
 import { aiRecommendationService } from '../services/aiRecommendationService';
 import { supabaseService } from '../services/supabaseService';
 import { recommendSchema } from '../validators/recommendValidator';
+import { financialService } from '../services/financialService';
+import { negotiationService } from '../services/negotiationService';
 
 export class CarController {
   /**
@@ -122,6 +124,55 @@ export class CarController {
         }
       }
     });
+  }
+
+  /**
+   * Get car loan interest rates: GET /api/bank-rates
+   */
+  public async getBankRates(req: Request, res: Response): Promise<void> {
+    try {
+      const rates = financialService.getBankRates();
+      res.json({
+        success: true,
+        rates
+      });
+    } catch (err: any) {
+      res.status(500).json({
+        success: false,
+        error: 'Failed to retrieve bank rates.',
+        details: err.message
+      });
+    }
+  }
+
+  /**
+   * Get customized negotiation kit: GET /api/negotiation-kit
+   */
+  public async getNegotiationKit(req: Request, res: Response): Promise<void> {
+    try {
+      const carName = req.query.carName as string;
+      const variant = (req.query.variant as string) || 'Base';
+
+      if (!carName) {
+        res.status(400).json({
+          success: false,
+          error: 'Missing query parameter: carName'
+        });
+        return;
+      }
+
+      const kit = await negotiationService.generateKit(carName, variant);
+      res.json({
+        success: true,
+        data: kit
+      });
+    } catch (err: any) {
+      res.status(500).json({
+        success: false,
+        error: 'Failed to generate negotiation kit.',
+        details: err.message
+      });
+    }
   }
 }
 

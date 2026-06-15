@@ -1,7 +1,7 @@
 {
-  "name": "cardekho_backend",
+  "name": "valt_backend",
   "version": "1.0.0",
-  "description": "AI Shortlist Builder Backend for CarDekho",
+  "description": "AI Shortlist Builder Backend for VALT",
   "main": "dist/app.js",
   "scripts": {
     "dev": "tsx watch app.ts",

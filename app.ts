@@ -31,7 +31,7 @@ app.use('/api', router);
 // Default Route
 app.get('/', (req, res) => {
   res.json({
-    message: 'Welcome to Cardekho AI Shortlist Builder Backend Server',
+    message: 'Welcome to VALT AI Shortlist Builder Backend Server',
     endpoints: {
       health: '/api/health',
       cars: '/api/cars',
@@ -43,7 +43,7 @@ app.get('/', (req, res) => {
 // Boot the Server
 app.listen(PORT, () => {
   console.log(`==================================================`);
-  console.log(`🚀 Cardekho AI Shortlist Backend online!`);
+  console.log(`🚀 VALT AI Shortlist Backend online!`);
   console.log(`⚡ Listening at http://localhost:${PORT}`);
   console.log(`📁 Local Health Check: http://localhost:${PORT}/api/health`);
   console.log(`==================================================`);
