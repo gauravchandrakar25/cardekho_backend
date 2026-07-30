@@ -17,7 +17,9 @@ export interface AffordabilityResult {
   maxCarPrice: number; // in Lakhs
   maxAllowedEMI: number; // in Rs
   actualCarEMI: number; // in Rs
-  downPaymentRequired: number; // in Lakhs
+  downPaymentRequired: number; // in Lakhs (minimum 20% benchmark)
+  downPaymentAmount: number; // in Lakhs (user selected/calculated down payment)
+  downPaymentPercent: number; // percentage of car price
   loanAmount: number; // in Lakhs
   totalFixedCommitmentPercent: number; // (fixedExpenses + actualEMI) / monthlySalary * 100
   ruleChecks: RuleCheckDetails;
@@ -43,7 +45,7 @@ class FinancialService {
    * EMI = [P x r x (1+r)^n] / [((1+r)^n) - 1]
    */
   public calculateEMI(principalLakhs: number, annualRate: number, tenureMonths: number): number {
-    const principal = principalLakhs * 100000; // convert Lakhs to absolute Rupees
+    const principal = Math.max(0, principalLakhs) * 100000; // convert Lakhs to absolute Rupees
     const monthlyRate = (annualRate / 12) / 100;
     
     if (monthlyRate === 0) {
@@ -75,30 +77,38 @@ class FinancialService {
   }
 
   /**
-   * Evaluate affordability for a specific car price under 20/4/10 rule
+   * Evaluate affordability for a specific car price under 20/4/10 rule with customizable down payment
    */
   public evaluateAffordability(
     carPriceLakhs: number,
     monthlySalary: number,
     fixedExpenses: number,
-    annualRate: number = 8.75 // Default to SBI rate
+    annualRate: number = 8.75, // Default to SBI rate
+    customDownPaymentLakhs?: number
   ): AffordabilityResult {
     const tenureMonths = 48; // 4-year tenure limit as per 20/4/10 rule
     const maxAllowedEMI = Math.round(monthlySalary * 0.10); // 10% EMI limit
     
-    // Down payment is exactly 20%
+    // Benchmark 20% down payment required by 20/4/10 rule
     const downPaymentRequired = carPriceLakhs * 0.20; 
-    const loanAmount = carPriceLakhs * 0.80;
     
-    // Calculate actual EMI based on the 80% loan amount over 4 years
+    // User down payment (defaults to 20% if not specified)
+    const downPaymentAmount = typeof customDownPaymentLakhs === 'number'
+      ? Math.max(0, Math.min(carPriceLakhs, customDownPaymentLakhs))
+      : downPaymentRequired;
+
+    const downPaymentPercent = carPriceLakhs > 0 ? (downPaymentAmount / carPriceLakhs) * 100 : 0;
+    const loanAmount = Math.max(0, carPriceLakhs - downPaymentAmount);
+    
+    // Calculate actual EMI based on the remaining loan amount over 4 years
     const actualCarEMI = this.calculateEMI(loanAmount, annualRate, tenureMonths);
     
-    // Calculate maximum affordable car price
+    // Calculate maximum affordable car price (max loan capacity + available down payment)
     const maxLoanAmount = this.calculateMaxPrincipal(maxAllowedEMI, annualRate, tenureMonths);
-    const maxCarPrice = maxLoanAmount / 0.80; // Total car value based on 20% down payment
+    const maxCarPrice = maxLoanAmount + downPaymentAmount;
 
     // Rule validation checks
-    const downPaymentMet = true; // User assumes they pay the 20% down payment
+    const downPaymentMet = downPaymentPercent >= 19.99; // Benchmark: at least 20% down payment
     const loanTenureMet = true; // Restricted to 4 years
     const emiLimitMet = actualCarEMI <= maxAllowedEMI;
     
@@ -113,7 +123,7 @@ class FinancialService {
 
     const emiRatio = actualCarEMI / maxAllowedEMI; // 1.0 means exactly 10% of salary
     
-    if (emiRatio <= 1.0 && cashflowHealthy) {
+    if (emiRatio <= 1.0 && cashflowHealthy && downPaymentMet) {
       status = 'Safe';
       // Map safe to score 85 - 100
       score = Math.round(100 - (15 * (emiRatio)));
@@ -121,12 +131,15 @@ class FinancialService {
       status = 'Stretching';
       // Map stretching to score 50 - 84
       const stretchingProgress = (emiRatio - 1.0) / 0.5; // 0 to 1
-      score = Math.round(84 - (34 * stretchingProgress));
+      score = Math.round(84 - (34 * Math.max(0, stretchingProgress)));
+      if (!downPaymentMet) {
+        score = Math.max(50, score - 10); // Slight penalty for insufficient down payment
+      }
     } else {
       status = 'Unsafe';
       // Map unsafe to score 10 - 49
       const unsafeProgress = Math.min((emiRatio - 1.5) / 1.0, 1); // scale progress
-      score = Math.round(49 - (39 * unsafeProgress));
+      score = Math.round(49 - (39 * Math.max(0, unsafeProgress)));
     }
 
     // Ensure scores are bound within safe values
@@ -139,6 +152,8 @@ class FinancialService {
       maxAllowedEMI,
       actualCarEMI,
       downPaymentRequired: parseFloat(downPaymentRequired.toFixed(2)),
+      downPaymentAmount: parseFloat(downPaymentAmount.toFixed(2)),
+      downPaymentPercent: parseFloat(downPaymentPercent.toFixed(1)),
       loanAmount: parseFloat(loanAmount.toFixed(2)),
       totalFixedCommitmentPercent,
       ruleChecks: {
